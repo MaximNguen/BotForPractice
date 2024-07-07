@@ -26,15 +26,10 @@ async def cmd_start(message: Message):
 async def menu(message: Message):
     await message.answer("Выберите блюда", reply_markup=await kb.menu())
     
-@router.callback_query(F.data.startswith("chosen_type_"))
+@router.callback_query(F.data.startswith("menu_"))
 async def menu(callback: CallbackQuery):
     await callback.answer("Вы выбрали категорию")
     await callback.message.answer("Выберите блюдо", reply_markup=await kb.chosen_type(callback.data.split("_")[1]))
-
-@router.callback_query(F.data.startswith("soup_"))
-async def menu(callback: CallbackQuery):
-    await callback.answer("Вы выбрали супы")
-    await callback.message.answer("Выберите блюдо", reply_markup=await kb.soups(callback.data.split("_")[1]))
 
 @router.message(F.text == "Регистрация")
 async def register(message:Message, state: FSMContext):

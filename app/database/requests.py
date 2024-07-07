@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database.models import async_session
-from app.database.models import User, Menu, Item, Soup
+from app.database.models import User, Menu, Item
 
 async def set_user(tg_id: int) -> None:
     async with async_session() as session:
@@ -18,7 +18,3 @@ async def get_menu():
 async def get_menu_item(menu_id):
     async with async_session() as session:
         return await session.scalars(select(Item).where(Item.id == menu_id))
-    
-async def get_menu_soups(soup_id):
-    async with async_session() as session:
-        return await session.scalars(select(Soup).where(Soup.id == soup_id))
