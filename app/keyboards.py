@@ -1,17 +1,17 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.database.requests import get_menu, get_menu_item
+from app.database.requests import get_menu
 
-main = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Меню')],
-    [KeyboardButton(text='Корзина')],
-    [KeyboardButton(text='Контакты')],
-    [KeyboardButton(text="Регистрация")]
+start = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text="Меню")],
+    [KeyboardButton(text="Корзина")],
+    [KeyboardButton(text="Контакты")],
 ], resize_keyboard=True, input_field_placeholder="Выберите команду...")
 
-get_number = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="Отправить номер телефона", request_contact=True)]
+contacts = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Менеджер", url="https://t.me/cafe_hanoi_73")],
+    [InlineKeyboardButton(text="Разработчик", url='https://t.me/MaxLikeVolleyball')],
 ])
 
 async def menu():
@@ -19,14 +19,6 @@ async def menu():
     keyboard = InlineKeyboardBuilder()
     for every_menu in all_menu:
         keyboard.add(InlineKeyboardButton(text=every_menu.name, callback_data=f"menu_{every_menu.id}"))
-    keyboard.add(InlineKeyboardButton(text="На главную", callback_data="go_main"))
-    return keyboard.adjust(2).as_markup()
-
-async def chosen_type(menu_id):
-    all_item = await get_menu_item(menu_id)
-    keyboard = InlineKeyboardBuilder()
-    for item in all_item:
-        keyboard.add(InlineKeyboardButton(text=item.name, callback_data=f"chosen_type_{item.category}"))
-    keyboard.add(InlineKeyboardButton(text="На главную", callback_data="go_main"))
+    keyboard.add(InlineKeyboardButton(text="На главную", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
 
