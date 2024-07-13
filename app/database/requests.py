@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
 from app.database.models import async_session
-from app.database.models import User, Menu
+from app.database.models import User, Menu, Food
 
 async def set_user(tg_id:int) -> None:
     async with async_session() as session:
@@ -14,3 +14,8 @@ async def set_user(tg_id:int) -> None:
 async def get_menu():
     async with async_session() as session:
         return await session.scalars(select(Menu))
+    
+async def get_foods():
+    async with async_session() as session:
+        return await session.scalars(select(Food))
+    

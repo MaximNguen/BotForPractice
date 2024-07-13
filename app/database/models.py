@@ -21,6 +21,15 @@ class Menu(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(25))
     
+class Food(Base):
+    __tablename__ = "foods"
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(15))
+    price: Mapped[int] = mapped_column()
+    size: Mapped[str] = mapped_column(String(10))
+    
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
