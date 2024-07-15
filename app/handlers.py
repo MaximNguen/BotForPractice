@@ -41,20 +41,25 @@ async def press_menu(message: Message):
     await message.answer("Вы выбрали раздел Меню", reply_markup=await kb.menu())
 
 @router.callback_query(F.data == "menu_1")
-async def soups(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", caption="Супы.", reply_markup=await kb.soups())
+async def soups_answer(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
+
+@router.callback_query(F.data.startswith("soup_multi_"))
+async def many_soup_answer(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.multi_soups())
+
 
 @router.callback_query(F.data == "menu_2")
-async def soups(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", caption="Вторые.")
+async def woks_answer(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
 
 @router.callback_query(F.data == "menu_3")
-async def soups(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", caption="Закуски.")
+async def snacks_answer(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", caption="Закуски.", reply_markup=await kb.snacks())
 
 @router.callback_query(F.data == "menu_4")
-async def soups(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", caption="Напитки.")
+async def drinks_answer(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", caption="Напитки.", reply_markup=await kb.drinks())
 
 @router.message(F.text == "Контакты")
 async def press_contacts(message: Message):
@@ -68,4 +73,7 @@ async def press_contacts(message: Message):
 Вторые - AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA
 Закуски - AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA
 Напитки - AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA
+Фо Бо, Миен Бо, Бун Бо - AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ
+Фо Га - AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ
+Том Ям - AgACAgIAAxkBAAIBNGaT992rC10jaJSdFlUYAAGTwMAqGgACTNwxG-FqoUgJClA-3gGXqgEAAwIAA3gAAzUE
 """
