@@ -29,6 +29,7 @@ class Food(Base):
     name: Mapped[str] = mapped_column(String(15))
     price: Mapped[int] = mapped_column()
     size: Mapped[str] = mapped_column(String(10))
+    add: Mapped[str] = mapped_column(String(50))
     
 async def async_main():
     async with engine.begin() as conn:

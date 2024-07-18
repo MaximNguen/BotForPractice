@@ -44,18 +44,57 @@ async def press_menu(message: Message):
 async def soups_answer(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
 
-@router.callback_query(F.data.startswith("soup_multi_"))
-async def many_soup_answer(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.multi_soups())
+
+@router.callback_query(F.data=="soup_multi_1")
+async def soups_pho_bo(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.pho_bo())
+
+@router.callback_query(F.data=="soup_multi_2")
+async def soups_mien_bo(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.mien_bo())
+    
+@router.callback_query(F.data=="soup_multi_11")
+async def soups_bun_bo(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.bun_bo())
+
+@router.callback_query(F.data=="soup_multi_6")
+async def soups_tom_yum(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ", reply_markup=await kb.tom_yum())
+    
+@router.callback_query(F.data=="soup_multi_9")
+async def soups_pho_ga(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
 
 
 @router.callback_query(F.data == "menu_2")
 async def woks_answer(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
 
+@router.callback_query(F.data == "wok_multi_13")
+async def woks_com_rang(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE", reply_markup=await kb.com_rang())
+    
+@router.callback_query(F.data == "wok_multi_18")
+async def woks_mien_sao(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ", reply_markup=await kb.mien_sao())
+    
+@router.callback_query(F.data == "wok_multi_22")
+async def woks_mi_sao(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ", reply_markup=await kb.mi_sao())
+
+@router.callback_query(F.data == "wok_multi_26")
+async def woks_pho_sao(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
+
+
 @router.callback_query(F.data == "menu_3")
 async def snacks_answer(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", caption="Закуски.", reply_markup=await kb.snacks())
+
+@router.callback_query(F.data == "snack_multi_31")
+async def snacks_nem(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ", reply_markup=await kb.nem())
+
 
 @router.callback_query(F.data == "menu_4")
 async def drinks_answer(callback: CallbackQuery):
@@ -75,5 +114,10 @@ async def press_contacts(message: Message):
 Напитки - AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA
 Фо Бо, Миен Бо, Бун Бо - AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ
 Фо Га - AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ
-Том Ям - AgACAgIAAxkBAAIBNGaT992rC10jaJSdFlUYAAGTwMAqGgACTNwxG-FqoUgJClA-3gGXqgEAAwIAA3gAAzUE
+Том Ям - AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ
+Кым Ранг - AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE
+Миен Сао -AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ
+Ми Сао - AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ
+Фо Сао - AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ
+Нэм - AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ
 """
