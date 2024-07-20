@@ -10,6 +10,8 @@ import app.database.requests as rq
 
 router = Router()
 
+"""class Order():"""
+
 @router.message(F.photo)
 async def get_photo_id(message: Message):
     await message.answer(f"ID - {message.photo[-1].file_id}")
@@ -26,7 +28,7 @@ async def to_main(callback: CallbackQuery):
 
 @router.message(F.text == "Режим работы")
 async def work_time(message: Message):
-    await message.answer("Ежедневно с 10:00 до 22:00 без выходных")
+    await message.answer(text="Ежедневно с 10:00 до 22:00 без выходных")
     
 @router.message(F.text == "Расположение")
 async def location(message: Message):
@@ -38,7 +40,15 @@ async def delivery_conditions(message: Message):
     
 @router.message(F.text == "Меню")
 async def press_menu(message: Message):
-    await message.answer("Вы выбрали раздел Меню", reply_markup=await kb.menu())
+    await message.answer("Вы выбрали раздел Меню. Выберите интересующее блюдо, чтобы добавить в корзину. Также прочитайте условия доставке, иначе ваш заказ будет отменен", reply_markup=await kb.menu())
+
+@router.message(F.text == "Корзина")
+async def basket(message: Message):
+    await message.answer("Корзина")
+
+@router.callback_query(F.data == "basket")
+async def basket_data(callback: CallbackQuery):
+    await callback.message.answer("Корзина")
 
 @router.callback_query(F.data == "menu_1")
 async def soups_answer(callback: CallbackQuery):
@@ -99,6 +109,16 @@ async def snacks_nem(callback: CallbackQuery):
 @router.callback_query(F.data == "menu_4")
 async def drinks_answer(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", caption="Напитки.", reply_markup=await kb.drinks())
+
+@router.callback_query(F.data.startswith("single_"))
+async def pick_food(callback: CallbackQuery):
+    all_foods = await rq.get_foods()
+    for food in all_foods:
+        if int(callback.data.split("_")[2]) == int(food.id):
+            if len(food.add) == 0:
+                await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
+            else:
+                await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
 
 @router.message(F.text == "Контакты")
 async def press_contacts(message: Message):

@@ -3,12 +3,18 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.database.requests import get_menu, get_foods
 
+
+check_soups = [int(i) for i in range(1, 13)]
+check_woks = [int(i) for i in range(13, 30)]
+check_snacks =[int(i) for i in range(30, 36)]
+check_drinks = [int(i) for i in range(36, 46)]
+
+
 start = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text="Режим работы")],
     [KeyboardButton(text="Расположение")],
     [KeyboardButton(text="Условия доставки")],
     [KeyboardButton(text="Меню"),
-    KeyboardButton(text="Заказать"),
     KeyboardButton(text="Корзина")],
     [KeyboardButton(text="Контакты")]
 ], resize_keyboard=True, input_field_placeholder="Выберите команду...")
@@ -44,7 +50,7 @@ async def soups():
     check_multi = []
     for every_soup in all_foods1:
         if every_soup.category == "Супы" and check_same.count(every_soup.name) == 1:
-            keyboard.add(InlineKeyboardButton(text=f"{every_soup.name} | {every_soup.size} | {every_soup.price}", callback_data=f"single_soup_{every_soup.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{every_soup.name} | {every_soup.size} | {every_soup.price}р", callback_data=f"single_soup_{every_soup.id}"))
         elif every_soup.category == "Супы" and check_same.count(every_soup.name) >1 and every_soup.name not in check_multi:
             keyboard.add(InlineKeyboardButton(text=f"{every_soup.name}", callback_data=f"soup_multi_{every_soup.id}"))
             check_multi.append(every_soup.name)
@@ -57,7 +63,7 @@ async def pho_bo():
     keyboard = InlineKeyboardBuilder()
     for pho in all_foods:
         if pho.name == "Фо Бо":
-            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price} | {pho.add}", callback_data=f"single_soup_{pho.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price}р | {pho.add}", callback_data=f"single_soup_{pho.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -67,7 +73,7 @@ async def mien_bo():
     keyboard = InlineKeyboardBuilder()
     for mien in all_foods:
         if mien.name == "Миен Бо":
-            keyboard.add(InlineKeyboardButton(text=f"{mien.name} | {mien.size} | {mien.price} | {mien.add}", callback_data=f"single_soup_{mien.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{mien.name} | {mien.size} | {mien.price}р | {mien.add}", callback_data=f"single_soup_{mien.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -77,7 +83,7 @@ async def bun_bo():
     keyboard = InlineKeyboardBuilder()
     for bun in all_foods:
         if bun.name == "Бун Бо":
-            keyboard.add(InlineKeyboardButton(text=f"{bun.name} | {bun.size} | {bun.price} | {bun.add}", callback_data=f"single_soup_{bun.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{bun.name} | {bun.size} | {bun.price}р | {bun.add}", callback_data=f"single_soup_{bun.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -87,7 +93,7 @@ async def tom_yum():
     keyboard = InlineKeyboardBuilder()
     for tom in all_foods:
         if tom.name == "Том Ям":
-            keyboard.add(InlineKeyboardButton(text=f"{tom.name} | {tom.size} | {tom.price} | {tom.add}", callback_data=f"single_soup_{tom.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{tom.name} | {tom.size} | {tom.price}р | {tom.add}", callback_data=f"single_soup_{tom.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -97,7 +103,7 @@ async def pho_ga():
     keyboard = InlineKeyboardBuilder()
     for fo_ga in all_foods:
         if fo_ga.name == "Фо Га":
-            keyboard.add(InlineKeyboardButton(text=f"{fo_ga.name} | {fo_ga.size} | {fo_ga.price} | {fo_ga.add}", callback_data=f"single_soup_{fo_ga.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{fo_ga.name} | {fo_ga.size} | {fo_ga.price}р | {fo_ga.add}", callback_data=f"single_soup_{fo_ga.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -113,7 +119,7 @@ async def woks():
     check_multi = []
     for every_wok in all_foods1:
         if every_wok.category == "Вторые" and check_same.count(every_wok.name) == 1:
-            keyboard.add(InlineKeyboardButton(text=f"{every_wok.name} | {every_wok.size} | {every_wok.price}", callback_data=f"single_wok_{every_wok.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{every_wok.name} | {every_wok.size} | {every_wok.price}р", callback_data=f"single_wok_{every_wok.id}"))
         elif every_wok.category == "Вторые" and check_same.count(every_wok.name) > 1 and every_wok.name not in check_multi:
             keyboard.add(InlineKeyboardButton(text=f"{every_wok.name}", callback_data=f"wok_multi_{every_wok.id}"))
             check_multi.append(every_wok.name)
@@ -125,7 +131,7 @@ async def com_rang():
     keyboard = InlineKeyboardBuilder()
     for com in all_foods:
         if com.name == "Кым Ранг":
-            keyboard.add(InlineKeyboardButton(text=f"{com.name} | {com.size} | {com.price} | {com.add}", callback_data=f"single_wok_{com.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{com.name} | {com.size} | {com.price}р | {com.add}", callback_data=f"single_wok_{com.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -135,7 +141,7 @@ async def mien_sao():
     keyboard = InlineKeyboardBuilder()
     for sao in all_foods:
         if sao.name == "Миен Сао":
-            keyboard.add(InlineKeyboardButton(text=f"{sao.name} | {sao.size} | {sao.price} | {sao.add}", callback_data=f"single_soup_{sao.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{sao.name} | {sao.size} | {sao.price}р | {sao.add}", callback_data=f"single_soup_{sao.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -145,7 +151,7 @@ async def mi_sao():
     keyboard = InlineKeyboardBuilder()
     for mi in all_foods:
         if mi.name =="Ми Сао":
-            keyboard.add(InlineKeyboardButton(text=f"{mi.name} | {mi.size} | {mi.price} | {mi.add}", callback_data=f"single_wok_{mi.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{mi.name} | {mi.size} | {mi.price}р | {mi.add}", callback_data=f"single_wok_{mi.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -155,7 +161,7 @@ async def pho_sao():
     keyboard = InlineKeyboardBuilder()
     for pho in all_foods:
         if pho.name == "Фо Сао":
-            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price} | {pho.add}", callback_data=f"sigle_wok_{pho.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price}р | {pho.add}", callback_data=f"sigle_wok_{pho.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -171,7 +177,7 @@ async def snacks():
     check_multi = []
     for every_snack in all_foods1:
         if every_snack.category == "Закуски" and check_same.count(every_snack.name) == 1:
-            keyboard.add(InlineKeyboardButton(text=f"{every_snack.name} | {every_snack.size} | {every_snack.price}", callback_data=f"single_snack_{every_snack.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{every_snack.name} | {every_snack.size} | {every_snack.price}р", callback_data=f"single_snack_{every_snack.id}"))
         elif every_snack.category == "Закуски" and check_same.count(every_snack.name) > 1 and every_snack.name not in check_multi:
             keyboard.add(InlineKeyboardButton(text=f"{every_snack.name}", callback_data=f"snack_multi_{every_snack.id}")) 
             check_multi.append(every_snack.name)
@@ -183,7 +189,7 @@ async def nem():
     keyboard = InlineKeyboardBuilder()
     for nem in all_foods:
         if nem.name == "Нэм":
-            keyboard.add(InlineKeyboardButton(text=f"{nem.name} | {nem.size} | {nem.price}", callback_data=f"single_snack_{nem.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{nem.name} | {nem.size} | {nem.price}р", callback_data=f"single_snack_{nem.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к закускам", callback_data="menu_3"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
@@ -194,7 +200,21 @@ async def drinks():
     keyboard = InlineKeyboardBuilder()
     for every_drink in all_foods:
         if every_drink.category == "Напитки":
-            keyboard.add(InlineKeyboardButton(text=f"{every_drink.name} | {every_drink.size} | {every_drink.price}", callback_data=f"single_drink_{every_drink.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{every_drink.name} | {every_drink.size} | {every_drink.price}р", callback_data=f"single_drink_{every_drink.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
       
+      
+async def after_pick(id):
+    keyboard = InlineKeyboardBuilder()
+    if int(id) in check_soups:
+        keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
+    elif int(id) in check_woks:
+        keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
+    elif int(id) in check_snacks:
+        keyboard.add(InlineKeyboardButton(text="Вернуться к закускам", callback_data="menu_3"))
+    else:
+        keyboard.add(InlineKeyboardButton(text="Вернуться к напиткам", callback_data="menu_4"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
+    keyboard.add(InlineKeyboardButton(text="Корзина", callback_data="basket"))
+    return keyboard.adjust(2).as_markup()
