@@ -218,3 +218,20 @@ async def after_pick(id):
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     keyboard.add(InlineKeyboardButton(text="Корзина", callback_data="basket"))
     return keyboard.adjust(2).as_markup()
+
+async def send_order():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text="Отправить заказ", callback_data="send_order"))
+    keyboard.add(InlineKeyboardButton(text="Очистить корзину", callback_data="clear"))
+    return keyboard.adjust(2).as_markup()
+
+async def clear_basket():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text="Очистить корзину", callback_data="clear"))
+    return keyboard.adjust(2).as_markup()
+    
+async def confirm_order():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text="Подтвердить заказ", callback_data="confirm_order"))
+    keyboard.add(InlineKeyboardButton(text="Очистить данные", callback_data="clear_state"))
+    return keyboard.adjust(2).as_markup()

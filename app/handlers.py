@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 import asyncio
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
@@ -7,10 +7,22 @@ from aiogram.fsm.context import FSMContext
 
 import app.keyboards as kb
 import app.database.requests as rq
+from config import TOKEN
+
+bot = Bot(token=TOKEN)
 
 router = Router()
 
-"""class Order():"""
+class Order(StatesGroup):
+    name = State()
+    number = State()
+    comment = State()
+
+order_name = []
+order_size = []
+order_price = []
+order_add = [] 
+total_order = []
 
 @router.message(F.photo)
 async def get_photo_id(message: Message):
@@ -44,12 +56,95 @@ async def press_menu(message: Message):
 
 @router.message(F.text == "Корзина")
 async def basket(message: Message):
-    await message.answer("Корзина")
+    if len(order_name) > 0:
+        mes = ''
+        for i in range(len(order_name)):
+            if str(order_add[i]) != "None":
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]}"
+            else:
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р"
+        mes += f"\nСумма заказа составляет {sum(order_price)}"
+        total_order.append(mes)
+        check_price = sum(order_price) - 1500
+        if check_price < 0:
+            mes += f"\nВам не хватает {abs(check_price)}р для заказа"
+            await message.answer(text=mes, reply_markup=await kb.clear_basket())
+        else:
+            mes += "\nСумма заказа доступна для доставки"
+            await message.answer(text=mes, reply_markup=await kb.send_order())
+    else:
+        await message.answer("Корзина пуста")
 
 @router.callback_query(F.data == "basket")
 async def basket_data(callback: CallbackQuery):
-    await callback.message.answer("Корзина")
+    if len(order_name) > 0:
+        mes = ''
+        for i in range(len(order_name)):
+            if str(order_add[i]) != "None":
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]}"
+            else:
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р"
+        mes += f"\nСумма заказа составляет {sum(order_price)}"
+        total_order.append(mes)
+        check_price = sum(order_price) - 1500
+        if check_price < 0:
+            mes += f"\nВам не хватает {abs(check_price)}р для заказа"
+            await callback.message.answer(text=mes, reply_markup=await kb.clear_basket())
+        else:
+            mes += "\nСумма заказа доступна для доставки"
+            await callback.message.answer(text=mes, reply_markup=await kb.send_order())
+    else:
+        await callback.message.answer("Корзина пуста")
 
+@router.callback_query(F.data == "clear")
+async def clear_busket(callback: CallbackQuery):
+    order_name.clear()
+    order_size.clear()
+    order_price.clear()
+    order_add.clear() 
+    total_order.clear()
+    await callback.message.answer("Корзина очищена")    
+
+@router.callback_query(F.data == "send_order")
+async def get_costumer_name(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(Order.name)
+    await callback.message.answer("Введите ваше имя")
+    
+@router.message(Order.name)
+async def get_costumer_number(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await state.set_state(Order.number)
+    await message.answer("Введите ваш номер телефона")
+    
+@router.message(Order.number) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(number=message.text)
+    await state.set_state(Order.comment)
+    await message.answer("Напишите свой комментарий (Время доставки, убрать какой-то ингрендиент из какого-то блюда и т. д.)")
+    
+@router.message(Order.comment)
+async def gone_order(message: Message, state: FSMContext):
+    await state.update_data(comment=message.text)
+    data = await state.get_data()
+    await message.answer(text=f"{total_order[-1]}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
+
+@router.callback_query(F.data == "confirm_order")
+async def confirming(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await bot.send_message(text=f"{total_order[-1]}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    await state.clear()
+    order_name.clear()
+    order_size.clear()
+    order_price.clear()
+    order_add.clear() 
+    total_order.clear()
+    await callback.message.answer("Заказ был передан на обработку")
+
+@router.callback_query(F.data == "clear_state")
+async def clearning_state(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.answer("Данные очищены, можете снова их вводить")
+  
 @router.callback_query(F.data == "menu_1")
 async def soups_answer(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
@@ -115,7 +210,11 @@ async def pick_food(callback: CallbackQuery):
     all_foods = await rq.get_foods()
     for food in all_foods:
         if int(callback.data.split("_")[2]) == int(food.id):
-            if len(food.add) == 0:
+            order_name.append(food.name)
+            order_size.append(food.size)
+            order_price.append(food.price)
+            order_add.append(food.add)
+            if food.add == "None":
                 await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
             else:
                 await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
@@ -124,6 +223,9 @@ async def pick_food(callback: CallbackQuery):
 async def press_contacts(message: Message):
     await message.answer("Если есть другие вопросы, то можете связаться с нашим менеджером! Если есть претензии по работе бота, внизу есть тг разработчика", reply_markup=kb.contacts)
     
+    
+
+
 """
 Списки фоток по ID
 Лого кафешки - AgACAgIAAxkBAAM0ZovpRP0tUxK4RnzpMBB_AAFD5s4wAAIo4DEbQvpgSJVdwV7ynw6BAQADAgADeAADNQQ
