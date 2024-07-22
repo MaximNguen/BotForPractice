@@ -4,6 +4,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+import time
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -16,6 +17,7 @@ router = Router()
 class Order(StatesGroup):
     name = State()
     number = State()
+    address = State()
     comment = State()
 
 order_name = []
@@ -60,10 +62,10 @@ async def basket(message: Message):
         mes = ''
         for i in range(len(order_name)):
             if str(order_add[i]) != "None":
-                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]}"
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]} "
             else:
-                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р"
-        mes += f"\nСумма заказа составляет {sum(order_price)}"
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р "
+        mes += f"\nСумма заказа составляет {sum(order_price)}р"
         total_order.append(mes)
         check_price = sum(order_price) - 1500
         if check_price < 0:
@@ -81,10 +83,10 @@ async def basket_data(callback: CallbackQuery):
         mes = ''
         for i in range(len(order_name)):
             if str(order_add[i]) != "None":
-                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]}"
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р | {order_add[i]} "
             else:
-                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р"
-        mes += f"\nСумма заказа составляет {sum(order_price)}"
+                mes += f"\n{order_name[i]} | {order_size[i]} | {order_price[i]}р "
+        mes += f"\nСумма заказа составляет {sum(order_price)}р"
         total_order.append(mes)
         check_price = sum(order_price) - 1500
         if check_price < 0:
@@ -119,19 +121,29 @@ async def get_costumer_number(message: Message, state: FSMContext):
 @router.message(Order.number) 
 async def get_costumer_comment(message: Message, state: FSMContext):
     await state.update_data(number=message.text)
-    await state.set_state(Order.comment)
-    await message.answer("Напишите свой комментарий (Время доставки, убрать какой-то ингрендиент из какого-то блюда и т. д.)")
+    await state.set_state(Order.address)
+    await message.answer("Напишите свой адрес")
     
+@router.message(Order.address) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(address=message.text)
+    await state.set_state(Order.comment)
+    await message.answer("Напишите свой комментарий (Время доставки, убрать какой-то ингрендиент из какого-то блюда и т. д.) и напишите как вы примите заказ (В фудкорте или доставкой)")
+
 @router.message(Order.comment)
 async def gone_order(message: Message, state: FSMContext):
     await state.update_data(comment=message.text)
     data = await state.get_data()
-    await message.answer(text=f"{total_order[-1]}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
+    await message.answer(text=f"{total_order[-1]}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
 
 @router.callback_query(F.data == "confirm_order")
 async def confirming(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await bot.send_message(text=f"{total_order[-1]}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    current_time = time.time()
+    time_pieces = time.localtime(current_time)
+    time_info = f'{time_pieces.tm_mday}.{time_pieces.tm_mon}.{time_pieces.tm_year} | {time_pieces.tm_hour}:{time_pieces.tm_min}:{time_pieces.tm_sec}'
+    await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], total_order[-1], str(sum(order_price)))
+    await bot.send_message(text=f"{total_order[-1]}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)
     await state.clear()
     order_name.clear()
     order_size.clear()
@@ -170,6 +182,14 @@ async def soups_tom_yum(callback: CallbackQuery):
 async def soups_pho_ga(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
 
+@router.callback_query(F.data =="soup_multi_5")
+async def soups_sot_vang(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ", reply_markup=await kb.sot_vang())
+
+@router.callback_query(F.data =="soup_multi_8")
+async def soups_sot_vang(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ", reply_markup=await kb.pho_sot_vang())
+
 
 @router.callback_query(F.data == "menu_2")
 async def woks_answer(callback: CallbackQuery):
@@ -191,10 +211,14 @@ async def woks_mi_sao(callback: CallbackQuery):
 async def woks_pho_sao(callback: CallbackQuery):
     await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
 
+@router.callback_query(F.data == "wok_multi_16")
+async def woks_bun_nem(callback: CallbackQuery):
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ", reply_markup=await kb.bun_nem())
+
 
 @router.callback_query(F.data == "menu_3")
 async def snacks_answer(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", caption="Закуски.", reply_markup=await kb.snacks())
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", reply_markup=await kb.snacks())
 
 @router.callback_query(F.data == "snack_multi_31")
 async def snacks_nem(callback: CallbackQuery):
@@ -236,10 +260,13 @@ async def press_contacts(message: Message):
 Напитки - AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA
 Фо Бо, Миен Бо, Бун Бо - AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ
 Фо Га - AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ
+Фо Шот Ванг - AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ
+Шот Ванг - AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ
 Том Ям - AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ
 Кым Ранг - AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE
 Миен Сао -AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ
 Ми Сао - AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ
+Бун Нэм - AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ
 Фо Сао - AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ
 Нэм - AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ
 """

@@ -49,9 +49,7 @@ async def soups():
         check_same.append(soup.name)
     check_multi = []
     for every_soup in all_foods1:
-        if every_soup.category == "Супы" and check_same.count(every_soup.name) == 1:
-            keyboard.add(InlineKeyboardButton(text=f"{every_soup.name} | {every_soup.size} | {every_soup.price}р", callback_data=f"single_soup_{every_soup.id}"))
-        elif every_soup.category == "Супы" and check_same.count(every_soup.name) >1 and every_soup.name not in check_multi:
+        if every_soup.name not in check_multi and every_soup.category == "Супы":
             keyboard.add(InlineKeyboardButton(text=f"{every_soup.name}", callback_data=f"soup_multi_{every_soup.id}"))
             check_multi.append(every_soup.name)
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
@@ -108,6 +106,26 @@ async def pho_ga():
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
 
+async def sot_vang():
+    all_foods = await get_foods()
+    keyboard = InlineKeyboardBuilder()
+    for sot in all_foods:
+        if sot.name == "Шот Ванг":
+            keyboard.add(InlineKeyboardButton(text=f"{sot.name} | {sot.size} | {sot.price}р", callback_data=f"single_soup_{sot.id}"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
+    return keyboard.adjust(2).as_markup()
+
+async def pho_sot_vang():
+    all_foods = await get_foods()
+    keyboard = InlineKeyboardBuilder()
+    for sot in all_foods:
+        if sot.name == "Фо Шот Ванг":
+            keyboard.add(InlineKeyboardButton(text=f"{sot.name} | {sot.size} | {sot.price}р", callback_data=f"single_soup_{sot.id}"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к супам", callback_data="menu_1"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
+    return keyboard.adjust(2).as_markup()
+
     
 async def woks():
     all_foods = await get_foods()
@@ -118,9 +136,7 @@ async def woks():
         check_same.append(wok.name)
     check_multi = []
     for every_wok in all_foods1:
-        if every_wok.category == "Вторые" and check_same.count(every_wok.name) == 1:
-            keyboard.add(InlineKeyboardButton(text=f"{every_wok.name} | {every_wok.size} | {every_wok.price}р", callback_data=f"single_wok_{every_wok.id}"))
-        elif every_wok.category == "Вторые" and check_same.count(every_wok.name) > 1 and every_wok.name not in check_multi:
+        if every_wok.category == "Вторые" and every_wok.name not in check_multi:
             keyboard.add(InlineKeyboardButton(text=f"{every_wok.name}", callback_data=f"wok_multi_{every_wok.id}"))
             check_multi.append(every_wok.name)
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
@@ -161,7 +177,17 @@ async def pho_sao():
     keyboard = InlineKeyboardBuilder()
     for pho in all_foods:
         if pho.name == "Фо Сао":
-            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price}р | {pho.add}", callback_data=f"sigle_wok_{pho.id}"))
+            keyboard.add(InlineKeyboardButton(text=f"{pho.name} | {pho.size} | {pho.price}р | {pho.add}", callback_data=f"single_wok_{pho.id}"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
+    keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
+    return keyboard.adjust(2).as_markup()
+
+async def bun_nem():
+    all_foods = await get_foods()
+    keyboard = InlineKeyboardBuilder()
+    for bun in all_foods:
+        if bun.name == "Бун Нэм":
+            keyboard.add(InlineKeyboardButton(text=f"{bun.name} | {bun.size} | {bun.price}р | {bun.add}", callback_data=f"single_wok_{bun.id}"))
     keyboard.add(InlineKeyboardButton(text="Вернуться ко вторым", callback_data="menu_2"))
     keyboard.add(InlineKeyboardButton(text="Вернуться к меню", callback_data='to_main'))
     return keyboard.adjust(2).as_markup()
