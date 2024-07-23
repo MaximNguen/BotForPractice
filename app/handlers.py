@@ -54,7 +54,7 @@ async def delivery_conditions(message: Message):
     
 @router.message(F.text == "Меню")
 async def press_menu(message: Message):
-    await message.answer("Вы выбрали раздел Меню. Выберите интересующее блюдо, чтобы добавить в корзину. Также прочитайте условия доставке, иначе ваш заказ будет отменен", reply_markup=await kb.menu())
+    await message.answer("Вы выбрали раздел Меню. Выберите интересующее блюдо, чтобы добавить в корзину. Также прочитайте условия доставки, иначе ваш заказ будет отменен", reply_markup=await kb.menu())
 
 @router.message(F.text == "Корзина")
 async def basket(message: Message):
@@ -227,7 +227,7 @@ async def snacks_nem(callback: CallbackQuery):
 
 @router.callback_query(F.data == "menu_4")
 async def drinks_answer(callback: CallbackQuery):
-    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", caption="Напитки.", reply_markup=await kb.drinks())
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", reply_markup=await kb.drinks())
 
 @router.callback_query(F.data.startswith("single_"))
 async def pick_food(callback: CallbackQuery):
