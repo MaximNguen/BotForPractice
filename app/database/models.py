@@ -44,7 +44,16 @@ class Orders(Base):
     order: Mapped[str] = mapped_column(String(500))
     price: Mapped[str] = mapped_column(String(7))
     
+class Cart(Base):
+    __tablename__ = "carts"
     
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tg_id: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(15))
+    price: Mapped[int] = mapped_column()
+    size: Mapped[str] = mapped_column(String(10))
+    add: Mapped[str] = mapped_column(String(50))
+
 
 async def async_main():
     async with engine.begin() as conn:
