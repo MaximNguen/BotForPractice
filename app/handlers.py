@@ -175,7 +175,8 @@ async def confirming(callback: CallbackQuery, state: FSMContext):
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
     msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
     await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], msg_cart, str(sum(check_price)))
-    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    """await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)"""
+    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=1627316505)
     await state.clear()
     await rq.delete_cart_foods(callback.from_user.id)
     await callback.message.answer("Заказ был передан на обработку")
