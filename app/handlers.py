@@ -27,9 +27,9 @@ check_words = ["Режим работы", 'Расположение', 'Усло�
 delete_allow_status = True
 
 
-@router.message(F.photo)
+"""@router.message(F.photo)
 async def get_photo_id(message: Message):
-    await message.answer(f"ID - {message.photo[-1].file_id}")
+    await message.answer(f"ID - {message.photo[-1].file_id}")"""
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
@@ -170,13 +170,12 @@ async def confirming(callback: CallbackQuery, state: FSMContext):
     check_add = await rq.get_carts_add(callback.from_user.id)
     for i in range(len(check_name)):
         if check_add[i] == "None":
-            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}'
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
         else:
-            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
     msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
     await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], msg_cart, str(sum(check_price)))
-    """await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)"""
-    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=1627316505)
+    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)
     await state.clear()
     await rq.delete_cart_foods(callback.from_user.id)
     await callback.message.answer("Заказ был передан на обработку")
