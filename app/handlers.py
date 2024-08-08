@@ -14,7 +14,6 @@ bot = Bot(token=TOKEN)
 
 router = Router()
 
-msg_delete = None
 
 class Order(StatesGroup):
     name = State()
@@ -39,11 +38,7 @@ async def cmd_start(message: Message):
 
 @router.callback_query(F.data == "to_main")
 async def to_main(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer("Вы вернулись в раздел Меню", reply_markup=await kb.menu())
-    msg_delete = msg.message_id
+    await callback.message.answer("Вы вернулись в раздел Меню", reply_markup=await kb.menu())
 
 @router.message(F.text == "Режим работы")
 async def work_time(message: Message):
@@ -187,136 +182,75 @@ async def clearning_state(callback: CallbackQuery, state: FSMContext):
   
 @router.callback_query(F.data == "menu_1")
 async def soups_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
-    msg_delete = msg.message_id
-    
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
+
 
 @router.callback_query(F.data=="soup_multi_1")
 async def soups_pho_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.pho_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.pho_bo())
     
 @router.callback_query(F.data=="soup_multi_2")
 async def soups_mien_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.mien_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.mien_bo())
     
 @router.callback_query(F.data=="soup_multi_11")
 async def soups_bun_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.bun_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.bun_bo())
 
 @router.callback_query(F.data=="soup_multi_6")
 async def soups_tom_yum(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ", reply_markup=await kb.tom_yum())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ", reply_markup=await kb.tom_yum())
     
 @router.callback_query(F.data=="soup_multi_9")
 async def soups_pho_ga(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
 
 @router.callback_query(F.data =="soup_multi_5")
 async def soups_sot_vang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ", reply_markup=await kb.sot_vang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ", reply_markup=await kb.sot_vang())
 
 @router.callback_query(F.data =="soup_multi_8")
 async def soups_sot_vang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ", reply_markup=await kb.pho_sot_vang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ", reply_markup=await kb.pho_sot_vang())
 
 
 @router.callback_query(F.data == "menu_2")
 async def woks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
     
 @router.callback_query(F.data == "wok_multi_13")
 async def woks_com_rang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE", reply_markup=await kb.com_rang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE", reply_markup=await kb.com_rang())
     
 @router.callback_query(F.data == "wok_multi_18")
 async def woks_mien_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ", reply_markup=await kb.mien_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ", reply_markup=await kb.mien_sao())
     
 @router.callback_query(F.data == "wok_multi_22")
 async def woks_mi_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ", reply_markup=await kb.mi_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ", reply_markup=await kb.mi_sao())
 
 @router.callback_query(F.data == "wok_multi_26")
 async def woks_pho_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
 
 @router.callback_query(F.data == "wok_multi_16")
 async def woks_bun_nem(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ", reply_markup=await kb.bun_nem())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ", reply_markup=await kb.bun_nem())
 
 
 @router.callback_query(F.data == "menu_3")
 async def snacks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", reply_markup=await kb.snacks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", reply_markup=await kb.snacks())
     
 @router.callback_query(F.data == "snack_multi_31")
 async def snacks_nem(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ", reply_markup=await kb.nem())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ", reply_markup=await kb.nem())
 
 
 @router.callback_query(F.data == "menu_4")
 async def drinks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", reply_markup=await kb.drinks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", reply_markup=await kb.drinks())
     
 
 @router.callback_query(F.data.startswith("single_"))
@@ -328,15 +262,9 @@ async def pick_food(callback: CallbackQuery):
             await rq.add_food_to_cart(userId, food.name, food.price, food.size, food.add)
             global msg_delete
             if food.add == "None":
-                if msg_delete:
-                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-                msg = await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
-                msg_delete = msg.message_id
+                await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
             else:
-                if msg_delete:
-                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-                msg = await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
-                msg_delete = msg.message_id
+                await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
 
 @router.message(F.text == "Контакты")
 async def press_contacts(message: Message):
