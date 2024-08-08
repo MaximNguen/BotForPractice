@@ -4,7 +4,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-import time
+import pytz
+import datetime
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -14,6 +15,7 @@ bot = Bot(token=TOKEN)
 
 router = Router()
 
+allowed_time = [int(i) for i in range(10, 22)]
 
 class Order(StatesGroup):
     name = State()
@@ -114,8 +116,14 @@ async def clear_busket(callback: CallbackQuery):
 
 @router.callback_query(F.data == "send_order")
 async def get_costumer_name(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Order.name)
-    await callback.message.answer("Введите ваше имя")
+    check_time_set = pytz.timezone("Europe/Samara")
+    check_time = datetime.datetime.now(check_time_set)
+    if int(check_time.strftime("%H")) in allowed_time:
+        if int(check_time.strftime("%H")) != 21 or (int(check_time.strftime("%H")) == 21 and int(check_time.strftime("%M")) < 30):
+            await state.set_state(Order.name)
+            await callback.message.answer("Введите ваше имя")
+    else:
+        await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
     
 @router.message(Order.name)
 async def get_costumer_number(message: Message, state: FSMContext):
@@ -155,9 +163,9 @@ async def gone_order(message: Message, state: FSMContext):
 @router.callback_query(F.data == "confirm_order")
 async def confirming(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    current_time = time.time()
-    time_pieces = time.localtime(current_time)
-    time_info = f'{time_pieces.tm_mday}.{time_pieces.tm_mon}.{time_pieces.tm_year} | {time_pieces.tm_hour}:{time_pieces.tm_min}:{time_pieces.tm_sec}'
+    current_time_set = pytz.timezone("Europe/Samara")
+    current_time = datetime.datetime.now(current_time_set)
+    time_info = current_time.strftime("%Y-%m-%d %H:%M:%S")
     msg_cart = ''
     check_name = await rq.get_carts_name(callback.from_user.id)
     check_size = await rq.get_carts_size(callback.from_user.id)
