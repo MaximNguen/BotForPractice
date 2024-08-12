@@ -75,10 +75,10 @@ async def basket(message: Message):
                 msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа"
-            await message.answer(text=msg_cart, reply_markup=await kb.clear_basket())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа на доставку, но доступно самовызов"
+            await message.answer(text=msg_cart, reply_markup=await kb.send_order())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки"
+            msg_cart += f"\nУ вас достаточная сумма заказа для отправки заказа на доставку или самовызов"
             await message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await message.answer("Корзина пуста")
@@ -100,10 +100,10 @@ async def basket_data(callback: CallbackQuery):
                 msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа"
-            await callback.message.answer(text=msg_cart, reply_markup=await kb.clear_basket())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа на доставку, но доступно самовызов"
+            await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки"
+            msg_cart += f"\nУ вас достаточная сумма заказа для отправки заказа на доставку или самовызов"
             await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await callback.message.answer("Корзина пуста")
@@ -135,7 +135,7 @@ async def get_costumer_number(message: Message, state: FSMContext):
 async def get_costumer_comment(message: Message, state: FSMContext):
     await state.update_data(number=message.text)
     await state.set_state(Order.address)
-    await message.answer('Напишите свой адрес (Если самовызов - напишите "Самовызов")')
+    await message.answer('Напишите свой адрес (Если самовызов - напишите "Самовызов"). Учтите, если у вас сумма заказа меньше 1500р и вы напишете свой адрес для доставки вместо самовызова, то мы отменим ваш заказ')
     
 @router.message(Order.address) 
 async def get_costumer_comment(message: Message, state: FSMContext):
