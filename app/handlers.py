@@ -15,14 +15,20 @@ bot = Bot(token=TOKEN)
 
 router = Router()
 
-allowed_time = [int(i) for i in range(10, 22)]
+allowed_time = [int(i) for i in range(10,22)]
 
 class Order(StatesGroup):
     name = State()
     number = State()
     address = State()
+    time = State()
     comment = State()
 
+class Order_InCafe(StatesGroup):
+    name = State()
+    number = State()
+    time = State()
+    comment = State()
 
 check_words = ["Режим работы", 'Расположение', 'Условия доставки', "Меню", "Корзина", "Контакты", "/start"]
 delete_allow_status = True
@@ -50,9 +56,9 @@ async def work_time(message: Message):
 async def location(message: Message):
     await message.answer("ТРЦ Аквамолл, Московское шоссе д. 108, 2 этаж, фуд-корт, кафе «HANOI вьетнамская кухня»", reply_markup=kb.location)
     
-@router.message(F.text == "Условия доставки")
+@router.message(F.text == "Условия доставки и самовыноса")
 async def delivery_conditions(message: Message):
-    await message.answer("Доставка осуществляется с 10:00 до 21:30. \nМинимальная сумма для заказа от 1500руб. \nДоставка платная: 150руб. к сумме заказа. \nЧтобы уточнить, можете связать с менеджером", reply_markup=kb.manager)
+    await message.answer("Доставка осуществляется с 10:00 до 21:30. \nМинимальная сумма для доставки заказа от 1500руб. \nДоставка платная: 150руб. к сумме заказа.\nСамовынос бесплатный\nЧтобы уточнить, можете связаться с менеджером", reply_markup=kb.manager)
     
 @router.message(F.text == "Меню")
 async def press_menu(message: Message):
@@ -70,15 +76,15 @@ async def basket(message: Message):
         check_add = await rq.get_carts_add(message.from_user.id)
         for i in range(len(check_name)):
             if check_add[i] == "None":
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
             else:
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа на доставку, но доступно самовызов"
-            await message.answer(text=msg_cart, reply_markup=await kb.send_order())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р для оформления заказа на доставку, но можно оформить заказ на самовынос"
+            await message.answer(text=msg_cart, reply_markup=await kb.send_order_no_delivery())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки заказа на доставку или самовызов"
+            msg_cart += f"\nУ вас достаточная сумма для отправки заказа на доставку или самовынос"
             await message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await message.answer("Корзина пуста")
@@ -95,15 +101,15 @@ async def basket_data(callback: CallbackQuery):
         check_add = await rq.get_carts_add(callback.from_user.id)
         for i in range(len(check_name)):
             if check_add[i] == "None":
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
             else:
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа на доставку, но доступно самовызов"
-            await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р для оформления заказа на доставку, но можно оформить заказ на самовынос"
+            await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order_no_delivery())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки заказа на доставку или самовызов"
+            msg_cart += f"\nУ вас достаточная сумма для отправки заказа на доставку или самовынос"
             await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await callback.message.answer("Корзина пуста")
@@ -122,6 +128,8 @@ async def get_costumer_name(callback: CallbackQuery, state: FSMContext):
         if int(check_time.strftime("%H")) != 21 or (int(check_time.strftime("%H")) == 21 and int(check_time.strftime("%M")) < 30):
             await state.set_state(Order.name)
             await callback.message.answer("Введите ваше имя")
+        else:
+            await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
     else:
         await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
     
@@ -129,19 +137,25 @@ async def get_costumer_name(callback: CallbackQuery, state: FSMContext):
 async def get_costumer_number(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(Order.number)
-    await message.answer("Введите ваш номер телефона (Просим вас внимательно ввести номер телефона, если номер неверно введен, то ответный звонок вы не получите для подтверждения заказа, следовательно вас заказ будет отменен)")
+    await message.answer("Введите Ваш номер телефона (просим внимательно написать Ваш номер телефона, чтобы с Вами смог связаться менеджер для подтверждения заказа)")
     
 @router.message(Order.number) 
-async def get_costumer_comment(message: Message, state: FSMContext):
+async def get_costumer_address(message: Message, state: FSMContext):
     await state.update_data(number=message.text)
     await state.set_state(Order.address)
-    await message.answer('Напишите свой адрес (Если самовызов - напишите "Самовызов"). Учтите, если у вас сумма заказа меньше 1500р и вы напишете свой адрес для доставки вместо самовызова, то мы отменим ваш заказ')
+    await message.answer('Напишите свой полный адрес для доставки (название улицы, номер дома, подъезд, этаж и номер квартиры)')
     
-@router.message(Order.address) 
-async def get_costumer_comment(message: Message, state: FSMContext):
+@router.message(Order.address)
+async def get_costumer_time(message: Message, state: FSMContext):
     await state.update_data(address=message.text)
+    await state.set_state(Order.time)
+    await message.answer("Напишите промежуток времени, к которому нужно доставить заказ")
+    
+@router.message(Order.time) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(time=message.text)
     await state.set_state(Order.comment)
-    await message.answer("Напишите свой комментарий (Время доставки - во сколько вы подойдете забрать заказ, если самовызов; убрать какой-то ингрендиент из какого-то блюда и т. д.)")
+    await message.answer("Напишите свой комментарий по поводу заказа (убрать ингредиент из какого-либо блюда и т.п.)")
 
 @router.message(Order.comment)
 async def gone_order(message: Message, state: FSMContext):
@@ -157,8 +171,8 @@ async def gone_order(message: Message, state: FSMContext):
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
         else:
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
-    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
-    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
+    msg_cart += f"\nСумма заказа составляет {sum(check_price) + 150}р с учетом стоимости доставки (150р)"
+    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВремя доставки - {data['time']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
 
 @router.callback_query(F.data == "confirm_order")
 async def confirming(callback: CallbackQuery, state: FSMContext):
@@ -176,12 +190,91 @@ async def confirming(callback: CallbackQuery, state: FSMContext):
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
         else:
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
-    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
+    msg_cart += f"\nСумма заказа составляет {sum(check_price) + 150}р (с учетом доставки)"
     await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], msg_cart, str(sum(check_price)))
-    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    await bot.send_message(text=f"Доставка:\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВремя доставки - {data['time']}\nКомментарий - {data['comment']}", chat_id=5109940267)
     await state.clear()
     await rq.delete_cart_foods(callback.from_user.id)
     await callback.message.answer("Заказ был передан на обработку")
+    
+    
+@router.callback_query(F.data == "send_order_no_delivery")
+async def get_costumer_name_in_cafe(callback: CallbackQuery, state: FSMContext):
+    check_time_set = pytz.timezone("Europe/Samara")
+    check_time = datetime.datetime.now(check_time_set)
+    if int(check_time.strftime("%H")) in allowed_time:
+        if int(check_time.strftime("%H")) != 21 or (int(check_time.strftime("%H")) == 21 and int(check_time.strftime("%M")) < 30):
+            await state.set_state(Order_InCafe.name)
+            await callback.message.answer("Введите ваше имя")
+        else:
+            await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
+    else:
+        await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
+
+@router.message(Order_InCafe.name)
+async def get_costumer_number_in_cafe(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await state.set_state(Order_InCafe.number)
+    await message.answer("Введите Ваш номер телефона (просим внимательно написать Ваш номер телефона, чтобы с Вами смог связаться менеджер для подтверждения заказа)")
+
+@router.message(Order_InCafe.number) 
+async def get_costumer_address(message: Message, state: FSMContext):
+    await state.update_data(number=message.text)
+    await state.set_state(Order_InCafe.time)
+    await message.answer('Напишите промежуток времени, к которому нужно выполнить самовынос')
+
+@router.message(Order_InCafe.time) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(time=message.text)
+    await state.set_state(Order_InCafe.comment)
+    await message.answer("Напишите свой комментарий по поводу заказа (убрать ингредиент из какого-либо блюда и т.п.)")
+
+@router.message(Order_InCafe.comment)
+async def gone_order(message: Message, state: FSMContext):
+    await state.update_data(comment=message.text)
+    data = await state.get_data()
+    msg_cart = ''
+    check_name = await rq.get_carts_name(message.from_user.id)
+    check_size = await rq.get_carts_size(message.from_user.id)
+    check_price = await rq.get_carts_price(message.from_user.id)
+    check_add = await rq.get_carts_add(message.from_user.id)
+    for i in range(len(check_name)):
+        if check_add[i] == "None":
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
+        else:
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
+    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
+    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nВремя самовыноса - {data['time']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order_no_delivery())
+
+@router.callback_query(F.data == "confirm_order_in_cafe")
+async def confirming(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    current_time_set = pytz.timezone("Europe/Samara")
+    current_time = datetime.datetime.now(current_time_set)
+    time_info = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    msg_cart = ''
+    check_name = await rq.get_carts_name(callback.from_user.id)
+    check_size = await rq.get_carts_size(callback.from_user.id)
+    check_price = await rq.get_carts_price(callback.from_user.id)
+    check_add = await rq.get_carts_add(callback.from_user.id)
+    for i in range(len(check_name)):
+        if check_add[i] == "None":
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
+        else:
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
+    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
+    await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], f"Самовынос - {data['time']}", data['comment'], msg_cart, str(sum(check_price)))
+    await bot.send_message(text=f"Самовынос:\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nВремя самовыноса - {data['time']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    await state.clear()
+    await rq.delete_cart_foods(callback.from_user.id)
+    await callback.message.answer("Заказ был передан на обработку")
+
+
+
+@router.callback_query(F.data == "clear_state_in_cafe")
+async def clearning_state(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.answer("Данные очищены, можете снова их вводить")
 
 @router.callback_query(F.data == "clear_state")
 async def clearning_state(callback: CallbackQuery, state: FSMContext):
