@@ -4,7 +4,8 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-import time
+import pytz
+import datetime
 
 import app.keyboards as kb
 import app.database.requests as rq
@@ -14,14 +15,20 @@ bot = Bot(token=TOKEN)
 
 router = Router()
 
-msg_delete = None
+allowed_time = [int(i) for i in range(10,22)]
 
 class Order(StatesGroup):
     name = State()
     number = State()
     address = State()
+    time = State()
     comment = State()
 
+class Order_InCafe(StatesGroup):
+    name = State()
+    number = State()
+    time = State()
+    comment = State()
 
 check_words = ["Режим работы", 'Расположение', 'Условия доставки', "Меню", "Корзина", "Контакты", "/start"]
 delete_allow_status = True
@@ -39,11 +46,7 @@ async def cmd_start(message: Message):
 
 @router.callback_query(F.data == "to_main")
 async def to_main(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer("Вы вернулись в раздел Меню", reply_markup=await kb.menu())
-    msg_delete = msg.message_id
+    await callback.message.answer("Вы вернулись в раздел Меню", reply_markup=await kb.menu())
 
 @router.message(F.text == "Режим работы")
 async def work_time(message: Message):
@@ -53,9 +56,9 @@ async def work_time(message: Message):
 async def location(message: Message):
     await message.answer("ТРЦ Аквамолл, Московское шоссе д. 108, 2 этаж, фуд-корт, кафе «HANOI вьетнамская кухня»", reply_markup=kb.location)
     
-@router.message(F.text == "Условия доставки")
+@router.message(F.text == "Условия доставки и самовыноса")
 async def delivery_conditions(message: Message):
-    await message.answer("Доставка осуществляется с 10:00 до 21:30. \nМинимальная сумма для заказа от 1500руб. \nДоставка платная: 150руб. к сумме заказа. \nЧтобы уточнить, можете связать с менеджером", reply_markup=kb.manager)
+    await message.answer("Доставка осуществляется с 10:00 до 21:30. \nМинимальная сумма для доставки заказа от 1500руб. \nДоставка платная: 150руб. к сумме заказа.\nСамовынос бесплатный\nЧтобы уточнить, можете связаться с менеджером", reply_markup=kb.manager)
     
 @router.message(F.text == "Меню")
 async def press_menu(message: Message):
@@ -73,15 +76,15 @@ async def basket(message: Message):
         check_add = await rq.get_carts_add(message.from_user.id)
         for i in range(len(check_name)):
             if check_add[i] == "None":
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
             else:
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа"
-            await message.answer(text=msg_cart, reply_markup=await kb.clear_basket())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р для оформления заказа на доставку, но можно оформить заказ на самовынос"
+            await message.answer(text=msg_cart, reply_markup=await kb.send_order_no_delivery())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки"
+            msg_cart += f"\nУ вас достаточная сумма для отправки заказа на доставку или самовынос"
             await message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await message.answer("Корзина пуста")
@@ -98,15 +101,15 @@ async def basket_data(callback: CallbackQuery):
         check_add = await rq.get_carts_add(callback.from_user.id)
         for i in range(len(check_name)):
             if check_add[i] == "None":
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
             else:
-                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]} | {check_add[i]}'
+                msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
         msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
         if sum(check_price) < 1500:
-            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р отправки заказа"
-            await callback.message.answer(text=msg_cart, reply_markup=await kb.clear_basket())
+            msg_cart += f"\nВам не хватает {1500 - sum(check_price)}р для оформления заказа на доставку, но можно оформить заказ на самовынос"
+            await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order_no_delivery())
         else:
-            msg_cart += f"\nУ вас достаточная сумма заказа для отправки"
+            msg_cart += f"\nУ вас достаточная сумма для отправки заказа на доставку или самовынос"
             await callback.message.answer(text=msg_cart, reply_markup=await kb.send_order())
     else:
         await callback.message.answer("Корзина пуста")
@@ -119,26 +122,40 @@ async def clear_busket(callback: CallbackQuery):
 
 @router.callback_query(F.data == "send_order")
 async def get_costumer_name(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Order.name)
-    await callback.message.answer("Введите ваше имя")
+    check_time_set = pytz.timezone("Europe/Samara")
+    check_time = datetime.datetime.now(check_time_set)
+    if int(check_time.strftime("%H")) in allowed_time:
+        if int(check_time.strftime("%H")) != 21 or (int(check_time.strftime("%H")) == 21 and int(check_time.strftime("%M")) < 30):
+            await state.set_state(Order.name)
+            await callback.message.answer("Введите ваше имя")
+        else:
+            await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
+    else:
+        await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
     
 @router.message(Order.name)
 async def get_costumer_number(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(Order.number)
-    await message.answer("Введите ваш номер телефона (Просим вас внимательно ввести номер телефона, если номер неверно введен, то ответный звонок вы не получите для подтверждения заказа, следовательно вас заказ будет отменен)")
+    await message.answer("Введите Ваш номер телефона (просим внимательно написать Ваш номер телефона, чтобы с Вами смог связаться менеджер для подтверждения заказа)")
     
 @router.message(Order.number) 
-async def get_costumer_comment(message: Message, state: FSMContext):
+async def get_costumer_address(message: Message, state: FSMContext):
     await state.update_data(number=message.text)
     await state.set_state(Order.address)
-    await message.answer('Напишите свой адрес (Если самовызов - напишите "Самовызов")')
+    await message.answer('Напишите свой полный адрес для доставки (название улицы, номер дома, подъезд, этаж и номер квартиры)')
     
-@router.message(Order.address) 
-async def get_costumer_comment(message: Message, state: FSMContext):
+@router.message(Order.address)
+async def get_costumer_time(message: Message, state: FSMContext):
     await state.update_data(address=message.text)
+    await state.set_state(Order.time)
+    await message.answer("Напишите промежуток времени, к которому нужно доставить заказ")
+    
+@router.message(Order.time) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(time=message.text)
     await state.set_state(Order.comment)
-    await message.answer("Напишите свой комментарий (Время доставки - во сколько вы подойдете забрать заказ, если самовызов; убрать какой-то ингрендиент из какого-то блюда и т. д.)")
+    await message.answer("Напишите свой комментарий по поводу заказа (убрать ингредиент из какого-либо блюда и т.п.)")
 
 @router.message(Order.comment)
 async def gone_order(message: Message, state: FSMContext):
@@ -154,15 +171,87 @@ async def gone_order(message: Message, state: FSMContext):
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
         else:
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
-    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
-    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
+    msg_cart += f"\nСумма заказа составляет {sum(check_price) + 150}р с учетом стоимости доставки (150р)"
+    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВремя доставки - {data['time']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order())
 
 @router.callback_query(F.data == "confirm_order")
 async def confirming(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    current_time = time.time()
-    time_pieces = time.localtime(current_time)
-    time_info = f'{time_pieces.tm_mday}.{time_pieces.tm_mon}.{time_pieces.tm_year} | {time_pieces.tm_hour}:{time_pieces.tm_min}:{time_pieces.tm_sec}'
+    current_time_set = pytz.timezone("Europe/Samara")
+    current_time = datetime.datetime.now(current_time_set)
+    time_info = current_time.strftime("%Y-%m-%d %H:%M:%S")
+    msg_cart = ''
+    check_name = await rq.get_carts_name(callback.from_user.id)
+    check_size = await rq.get_carts_size(callback.from_user.id)
+    check_price = await rq.get_carts_price(callback.from_user.id)
+    check_add = await rq.get_carts_add(callback.from_user.id)
+    for i in range(len(check_name)):
+        if check_add[i] == "None":
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
+        else:
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
+    msg_cart += f"\nСумма заказа составляет {sum(check_price) + 150}р (с учетом доставки)"
+    await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], msg_cart, str(sum(check_price)))
+    await bot.send_message(text=f"Доставка:\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nВремя доставки - {data['time']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    await state.clear()
+    await rq.delete_cart_foods(callback.from_user.id)
+    await callback.message.answer("Заказ был передан на обработку")
+    
+    
+@router.callback_query(F.data == "send_order_no_delivery")
+async def get_costumer_name_in_cafe(callback: CallbackQuery, state: FSMContext):
+    check_time_set = pytz.timezone("Europe/Samara")
+    check_time = datetime.datetime.now(check_time_set)
+    if int(check_time.strftime("%H")) in allowed_time:
+        if int(check_time.strftime("%H")) != 21 or (int(check_time.strftime("%H")) == 21 and int(check_time.strftime("%M")) < 30):
+            await state.set_state(Order_InCafe.name)
+            await callback.message.answer("Введите ваше имя")
+        else:
+            await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
+    else:
+        await callback.message.answer("Наше заведение на данный момент закрыт, сделайте заказ с 10:00 по 21:30")
+
+@router.message(Order_InCafe.name)
+async def get_costumer_number_in_cafe(message: Message, state: FSMContext):
+    await state.update_data(name=message.text)
+    await state.set_state(Order_InCafe.number)
+    await message.answer("Введите Ваш номер телефона (просим внимательно написать Ваш номер телефона, чтобы с Вами смог связаться менеджер для подтверждения заказа)")
+
+@router.message(Order_InCafe.number) 
+async def get_costumer_address(message: Message, state: FSMContext):
+    await state.update_data(number=message.text)
+    await state.set_state(Order_InCafe.time)
+    await message.answer('Напишите промежуток времени, к которому нужно выполнить самовынос')
+
+@router.message(Order_InCafe.time) 
+async def get_costumer_comment(message: Message, state: FSMContext):
+    await state.update_data(time=message.text)
+    await state.set_state(Order_InCafe.comment)
+    await message.answer("Напишите свой комментарий по поводу заказа (убрать ингредиент из какого-либо блюда и т.п.)")
+
+@router.message(Order_InCafe.comment)
+async def gone_order(message: Message, state: FSMContext):
+    await state.update_data(comment=message.text)
+    data = await state.get_data()
+    msg_cart = ''
+    check_name = await rq.get_carts_name(message.from_user.id)
+    check_size = await rq.get_carts_size(message.from_user.id)
+    check_price = await rq.get_carts_price(message.from_user.id)
+    check_add = await rq.get_carts_add(message.from_user.id)
+    for i in range(len(check_name)):
+        if check_add[i] == "None":
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р'
+        else:
+            msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
+    msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
+    await message.answer(text=f"{msg_cart}\nВаше имя - {data['name']}\nВаш номер телефона - {data['number']}\nВремя самовыноса - {data['time']}\nВаш комментарий - {data['comment']}", reply_markup=await kb.confirm_order_no_delivery())
+
+@router.callback_query(F.data == "confirm_order_in_cafe")
+async def confirming(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    current_time_set = pytz.timezone("Europe/Samara")
+    current_time = datetime.datetime.now(current_time_set)
+    time_info = current_time.strftime("%Y-%m-%d %H:%M:%S")
     msg_cart = ''
     check_name = await rq.get_carts_name(callback.from_user.id)
     check_size = await rq.get_carts_size(callback.from_user.id)
@@ -174,11 +263,18 @@ async def confirming(callback: CallbackQuery, state: FSMContext):
         else:
             msg_cart += f'\n{check_name[i]} | {check_size[i]} | {check_price[i]}р | {check_add[i]}'
     msg_cart += f"\nСумма заказа составляет {sum(check_price)}р"
-    await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], data['address'], data['comment'], msg_cart, str(sum(check_price)))
-    await bot.send_message(text=f"\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nАдрес доставки - {data['address']}\nКомментарий - {data['comment']}", chat_id=5109940267)
+    await rq.add_order(time_info, callback.message.from_user.id, data['name'], data['number'], f"Самовынос - {data['time']}", data['comment'], msg_cart, str(sum(check_price)))
+    await bot.send_message(text=f"Самовынос:\n{msg_cart}\nИмя - {data['name']}\nНомер телефона - {data['number']}\nВремя самовыноса - {data['time']}\nКомментарий - {data['comment']}", chat_id=5109940267)
     await state.clear()
     await rq.delete_cart_foods(callback.from_user.id)
     await callback.message.answer("Заказ был передан на обработку")
+
+
+
+@router.callback_query(F.data == "clear_state_in_cafe")
+async def clearning_state(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.message.answer("Данные очищены, можете снова их вводить")
 
 @router.callback_query(F.data == "clear_state")
 async def clearning_state(callback: CallbackQuery, state: FSMContext):
@@ -187,136 +283,75 @@ async def clearning_state(callback: CallbackQuery, state: FSMContext):
   
 @router.callback_query(F.data == "menu_1")
 async def soups_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
-    msg_delete = msg.message_id
-    
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANhZoxJiN7Y7dv8Mj8vMiBBhmrJIvsAAkzgMRtC-mhIDkhsQqnxwQUBAAMCAAN5AAM1BA", reply_markup=await kb.soups())
+
 
 @router.callback_query(F.data=="soup_multi_1")
 async def soups_pho_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.pho_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.pho_bo())
     
 @router.callback_query(F.data=="soup_multi_2")
 async def soups_mien_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.mien_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.mien_bo())
     
 @router.callback_query(F.data=="soup_multi_11")
 async def soups_bun_bo(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.bun_bo())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBMmaT99h9DOtRo-awcvFsPbXicKqpAAJL3DEb4WqhSMuXXZukS90aAQADAgADeAADNQQ", reply_markup=await kb.bun_bo())
 
 @router.callback_query(F.data=="soup_multi_6")
 async def soups_tom_yum(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ", reply_markup=await kb.tom_yum())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBl2aWx7rWSY-geSxSt4qBCN_fLQzIAAK23TEbu6i5SCIduFuyC-1oAQADAgADeAADNQQ", reply_markup=await kb.tom_yum())
     
 @router.callback_query(F.data=="soup_multi_9")
 async def soups_pho_ga(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBNmaT999QpsMp9EVve-6Bs3V3WHRdAAJN3DEb4WqhSBcu-p7g1idIAQADAgADeAADNQQ", reply_markup=await kb.pho_ga())
 
 @router.callback_query(F.data =="soup_multi_5")
 async def soups_sot_vang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ", reply_markup=await kb.sot_vang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEIWaevIZ2vttQBRC5ugi3OU7P8xRgAAJN5zEb5sL5SJ_zh7A5m3D_AQADAgADeAADNQQ", reply_markup=await kb.sot_vang())
 
 @router.callback_query(F.data =="soup_multi_8")
 async def soups_sot_vang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ", reply_markup=await kb.pho_sot_vang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIEH2aevGRwGyXMn1kVUbYLm6WjMmCuAAJM5zEb5sL5SMFrPvBMSspXAQADAgADeAADNQQ", reply_markup=await kb.pho_sot_vang())
 
 
 @router.callback_query(F.data == "menu_2")
 async def woks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANjZoxJlTMWtn0wzMo9VzAVtOD1lx4AAk7gMRtC-mhIglIXKdzFzLMBAAMCAAN5AAM1BA", reply_markup=await kb.woks())
     
 @router.callback_query(F.data == "wok_multi_13")
 async def woks_com_rang(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE", reply_markup=await kb.com_rang())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBtmaZUmwv7lg1MYkxKbhLAh9lvRDTAAJR3DEbMnfISLQAAUUOCIvmJAEAAwIAA3gAAzUE", reply_markup=await kb.com_rang())
     
 @router.callback_query(F.data == "wok_multi_18")
 async def woks_mien_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ", reply_markup=await kb.mien_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBuGaZUnBwaQj-6Ac8ndoOJRgZ0VLgAAJS3DEbMnfISOJGdPCy48BCAQADAgADeAADNQQ", reply_markup=await kb.mien_sao())
     
 @router.callback_query(F.data == "wok_multi_22")
 async def woks_mi_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ", reply_markup=await kb.mi_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBumaZUnKB9OcveA9ScZpuYKz5w6S9AAJT3DEbMnfISH_gqwE4xhraAQADAgADeAADNQQ", reply_markup=await kb.mi_sao())
 
 @router.callback_query(F.data == "wok_multi_26")
 async def woks_pho_sao(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvGaZUnWrrQ1HeikIuRVEm_E-MWbKAAJU3DEbMnfISOrnuTbXOsYpAQADAgADeAADNQQ", reply_markup=await kb.pho_sao())
 
 @router.callback_query(F.data == "wok_multi_16")
 async def woks_bun_nem(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ", reply_markup=await kb.bun_nem())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIESWaewfuK_Sbr-uCLy8aHqQ1x83bZAAJk5zEb5sL5SDOluvb6oVovAQADAgADeAADNQQ", reply_markup=await kb.bun_nem())
 
 
 @router.callback_query(F.data == "menu_3")
 async def snacks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", reply_markup=await kb.snacks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANlZoxJoiCbMeDXt0olY8STHghcOWgAAk_gMRtC-mhI34ENIRcxj1MBAAMCAAN5AAM1BA", reply_markup=await kb.snacks())
     
 @router.callback_query(F.data == "snack_multi_31")
 async def snacks_nem(callback: CallbackQuery):
-    global msg_delete
-    if msg_delete:
-        await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ", reply_markup=await kb.nem())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAAIBvmaZUyKv8dlimi-hytzEFk9UpLH8AAJX3DEbMnfISCbsGX13gHYeAQADAgADeAADNQQ", reply_markup=await kb.nem())
 
 
 @router.callback_query(F.data == "menu_4")
 async def drinks_answer(callback: CallbackQuery):
-    global msg_delete
-    msg = await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", reply_markup=await kb.drinks())
-    msg_delete = msg.message_id
+    await callback.message.answer_photo(photo="AgACAgIAAxkBAANnZoxJqYW3hdWLGkWuON6Ke7fL_dYAAlDgMRtC-mhIW1-AYG0LBc4BAAMCAAN5AAM1BA", reply_markup=await kb.drinks())
     
 
 @router.callback_query(F.data.startswith("single_"))
@@ -328,15 +363,9 @@ async def pick_food(callback: CallbackQuery):
             await rq.add_food_to_cart(userId, food.name, food.price, food.size, food.add)
             global msg_delete
             if food.add == "None":
-                if msg_delete:
-                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-                msg = await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
-                msg_delete = msg.message_id
+                await callback.message.answer(text=f"{food.name} | {food.size} | {food.price}р . Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
             else:
-                if msg_delete:
-                    await bot.delete_message(chat_id=callback.message.chat.id, message_id=msg_delete)
-                msg = await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
-                msg_delete = msg.message_id
+                await callback.message.answer(f"{food.name} | {food.size} | {food.price}р | {food.add}. Перенесен в корзину", reply_markup=await kb.after_pick(callback.data.split("_")[2]))
 
 @router.message(F.text == "Контакты")
 async def press_contacts(message: Message):

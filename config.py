@@ -1,1 +1,1 @@
-TOKEN = ":) Куда лезем дядя?"
+TOKEN = "7441708821:AAHxJiHRkoBJX5hwRtyHmfNZFpMHeoK1jhg"

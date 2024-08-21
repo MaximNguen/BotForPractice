@@ -13,7 +13,7 @@ check_drinks = [int(i) for i in range(36, 46)]
 start = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text="Режим работы")],
     [KeyboardButton(text="Расположение")],
-    [KeyboardButton(text="Условия доставки")],
+    [KeyboardButton(text="Условия доставки и самовыноса")],
     [KeyboardButton(text="Меню"),
     KeyboardButton(text="Корзина")],
     [KeyboardButton(text="Контакты")]
@@ -247,7 +247,14 @@ async def after_pick(id):
 
 async def send_order():
     keyboard = InlineKeyboardBuilder()
-    keyboard.add(InlineKeyboardButton(text="Отправить заказ", callback_data="send_order"))
+    keyboard.add(InlineKeyboardButton(text="Отправить заказ для доставки", callback_data="send_order"))
+    keyboard.add(InlineKeyboardButton(text="Отправить заказ для самовыноса", callback_data="send_order_no_delivery"))
+    keyboard.add(InlineKeyboardButton(text="Очистить корзину", callback_data="clear"))
+    return keyboard.adjust(2).as_markup()
+
+async def send_order_no_delivery():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text="Отправить заказ для самовыноса", callback_data="send_order_no_delivery"))
     keyboard.add(InlineKeyboardButton(text="Очистить корзину", callback_data="clear"))
     return keyboard.adjust(2).as_markup()
 
@@ -260,4 +267,10 @@ async def confirm_order():
     keyboard = InlineKeyboardBuilder()
     keyboard.add(InlineKeyboardButton(text="Подтвердить заказ", callback_data="confirm_order"))
     keyboard.add(InlineKeyboardButton(text="Очистить данные", callback_data="clear_state"))
+    return keyboard.adjust(2).as_markup()
+
+async def confirm_order_no_delivery():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text="Подтвердить заказ", callback_data="confirm_order_in_cafe"))
+    keyboard.add(InlineKeyboardButton(text="Очистить данные", callback_data="clear_state_in_cafe"))
     return keyboard.adjust(2).as_markup()
